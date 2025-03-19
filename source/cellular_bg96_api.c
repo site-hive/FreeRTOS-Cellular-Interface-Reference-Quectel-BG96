@@ -4708,32 +4708,22 @@ CellularError_t Cellular_MqttReadIncomingPublish( CellularHandle_t cellularHandl
     return cellularStatus;
 }
 
-CellularError_t Cellular_DetectModuleType(CellularHandle_t cellularHandle)
+CellularError_t Cellular_GetModuleType(CellularHandle_t cellularHandle, CellularModuleType_t * moduleType)
 {
     CellularContext_t * pContext = ( CellularContext_t * ) cellularHandle;
-    CellularError_t cellularStatus = CELLULAR_SUCCESS;
-    CellularModemInfo_t pModemInfo = {0};
     cellularModuleContext_t * pModuleContext = NULL;
-
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
 
     cellularStatus = _Cellular_GetModuleContext( pContext, ( void ** ) &pModuleContext );
-
-    if (cellularStatus == CELLULAR_SUCCESS)
+    
+    if (pModuleContext != NULL)
     {
-        cellularStatus = Cellular_GetModemInfo(cellularHandle, &pModemInfo);
-
-        if (strcmp(pModemInfo.modelId, "BG96"))
-        {
-            pModuleContext->moduleType = CELLULAR_MODULE_TYPE_BG96;
-        }
-        else if (strcmp(pModemInfo.modelId, "EG21G"))
-        {
-            pModuleContext->moduleType = CELLULAR_MODULE_TYPE_EG21G;
-        }
-        else
-        {
-            pModuleContext->moduleType = CELLULAR_MODULE_TYPE_UNKNOWN;
-        }
+        *moduleType = pModuleContext->moduleType;
+    }
+    else
+    {
+        *moduleType = CELLULAR_MODULE_TYPE_UNKNOWN;
+        cellularStatus = CELLULAR_UNKNOWN;
     }
 
     return cellularStatus;

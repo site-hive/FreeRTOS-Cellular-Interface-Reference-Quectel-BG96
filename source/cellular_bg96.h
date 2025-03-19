@@ -49,13 +49,7 @@
 #define DATA_SEND_TIMEOUT_MS                       ( 50000UL )
 #define DATA_READ_TIMEOUT_MS                       ( 50000UL )
 
-// @brief Enum representing type of module currently in use
-typedef enum CellularModuleType
-{
-    CELLULAR_MODULE_TYPE_UNKNOWN = 0,
-    CELLULAR_MODULE_TYPE_BG96, 
-    CELLULAR_MODULE_TYPE_EG21G,
-} CellularModuleType_t;
+#include "cellular_bg96_types.h"
 
 /**
  * @brief DNS query result.

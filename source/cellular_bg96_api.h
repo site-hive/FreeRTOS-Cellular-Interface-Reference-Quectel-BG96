@@ -8,6 +8,8 @@
 /* IoT Cellular data types. */
 #include "cellular_types.h"
 
+#include "cellular_bg96_types.h"
+
 #define BG96_API_NO_SSL_CONTEXT_ID    (-1)
 #define BG96_API_MQTT_SSL_CONTEXT_ID  (1)
 #define BG96_API_HTTPS_SSL_CONTEXT_ID (2)
@@ -195,6 +197,9 @@ CellularError_t Cellular_MqttReadIncomingPublish( CellularHandle_t cellularHandl
                                                   char * topic,
                                                   uint32_t topicBufferLength,
                                                   uint32_t * receivedTopicLength);
+
+CellularError_t Cellular_GetModuleType(CellularHandle_t cellularHandle, 
+                                       CellularModuleType_t * moduleType);
 
 
 #endif
