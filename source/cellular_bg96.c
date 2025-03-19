@@ -277,11 +277,11 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
             {
                 cellularStatus = Cellular_GetModemInfo(pContext, &pModemInfo);
         
-                if (strcmp(pModemInfo.modelId, "BG96"))
+                if (strcmp(pModemInfo.modelId, "BG96") == 0)
                 {
                     cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_BG96;
                 }
-                else if (strcmp(pModemInfo.modelId, "EG21G"))
+                else if (strcmp(pModemInfo.modelId, "EG21G") == 0)
                 {
                     cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_EG21G;
                 }
