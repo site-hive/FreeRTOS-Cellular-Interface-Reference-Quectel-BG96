@@ -49,6 +49,14 @@
 #define DATA_SEND_TIMEOUT_MS                       ( 50000UL )
 #define DATA_READ_TIMEOUT_MS                       ( 50000UL )
 
+// @brief Enum representing type of module currently in use
+typedef enum CellularModuleType
+{
+    CELLULAR_MODULE_TYPE_UNKNOWN = 0,
+    CELLULAR_MODULE_TYPE_BG96, 
+    CELLULAR_MODULE_TYPE_EG21G,
+} CellularModuleType_t;
+
 /**
  * @brief DNS query result.
  */
@@ -78,6 +86,7 @@ typedef struct cellularModuleContext
     uint8_t dnsIndex;              /* DNS query current index. */
     char * pDnsUsrData;            /* DNS user data to store the result. */
     CellularDnsResultEventCallback_t dnsEventCallback;
+    CellularModuleType_t moduleType; /* Represents the current cellular module being used */
 } cellularModuleContext_t;
 
 CellularPktStatus_t _Cellular_ParseSimstat( char * pInputStr,

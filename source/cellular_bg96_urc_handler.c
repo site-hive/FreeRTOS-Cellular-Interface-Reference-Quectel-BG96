@@ -95,6 +95,7 @@ CellularAtParseTokenMap_t CellularUrcHandlerTable[] =
     { "QMTDISC",           _Cellular_ProcessMqttDisconnect  },
     { "QMTOPEN",           _Cellular_ProcessMqttOpen        },
     { "QMTPUB",            _Cellular_ProcessMqttPublish     },
+    { "QMTPUBEX",          _Cellular_ProcessMqttPublish     },
     { "QMTRECV",           _Cellular_ProcessMqttReceive     },
     { "QMTSTAT",           _Cellular_ProcessMqttState       },
     { "QMTSUB",            _Cellular_ProcessMqttSubscribe   },

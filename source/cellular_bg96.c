@@ -33,6 +33,7 @@
 #include "cellular_common.h"
 #include "cellular_common_portable.h"
 #include "cellular_bg96.h"
+#include "cellular_api.h"
 
 /*-----------------------------------------------------------*/
 
@@ -215,6 +216,7 @@ CellularError_t Cellular_ModuleCleanUp( const CellularContext_t * pContext )
 CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
 {
     CellularError_t cellularStatus = CELLULAR_SUCCESS;
+    CellularModemInfo_t pModemInfo = {0};
     CellularAtReq_t atReqGetNoResult =
     {
         NULL,
@@ -269,7 +271,28 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
             cellularStatus = sendAtCommandWithRetryTimeout( pContext, &atReqGetNoResult );
         }
 
-        if( cellularStatus == CELLULAR_SUCCESS )
+        if ( cellularStatus == CELLULAR_SUCCESS )
+        {
+            if (cellularStatus == CELLULAR_SUCCESS)
+            {
+                cellularStatus = Cellular_GetModemInfo(pContext, &pModemInfo);
+        
+                if (strcmp(pModemInfo.modelId, "BG96"))
+                {
+                    cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_BG96;
+                }
+                else if (strcmp(pModemInfo.modelId, "EG21G"))
+                {
+                    cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_EG21G;
+                }
+                else
+                {
+                    cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_UNKNOWN;
+                }
+            }
+        }
+
+        if( ( cellularStatus == CELLULAR_SUCCESS ) && ( cellularBg96Context.moduleType == CELLULAR_MODULE_TYPE_BG96 ) )
         {
             /* Configure Band configuration to all bands. */
             atReqGetNoResult.pAtCmd = "AT+QCFG=\"band\",f,400a0e189f,a0e189f";
@@ -278,12 +301,12 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
 
         if( cellularStatus == CELLULAR_SUCCESS )
         {
-            /* Configure RAT(s) to be Searched to Automatic. */
-            atReqGetNoResult.pAtCmd = "AT+QCFG=\"nwscanmode\",0,1";
+            /* Configure RAT(s) to be Searched to LTE only. */
+            atReqGetNoResult.pAtCmd = "AT+QCFG=\"nwscanmode\",3,1";
             cellularStatus = sendAtCommandWithRetryTimeout( pContext, &atReqGetNoResult );
         }
 
-        if( cellularStatus == CELLULAR_SUCCESS )
+        if( ( cellularStatus == CELLULAR_SUCCESS ) && ( cellularBg96Context.moduleType == CELLULAR_MODULE_TYPE_BG96 ))
         {
             /* Configure Network Category to be Searched under LTE RAT to LTE Cat M1 and Cat NB1. */
             atReqGetNoResult.pAtCmd = "AT+QCFG=\"iotopmode\",2,1";
@@ -297,7 +320,7 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
             cellularStatus = sendAtCommandWithRetryTimeout( pContext, &atReqGetNoResult );
         }
 
-        if( cellularStatus == CELLULAR_SUCCESS )
+        if( ( cellularStatus == CELLULAR_SUCCESS ) && ( cellularBg96Context.moduleType == CELLULAR_MODULE_TYPE_BG96 ) )
         {
             retAppendRat = appendRatList( ratSelectCmd, CELLULAR_CONFIG_DEFAULT_RAT );
             configASSERT( retAppendRat == true );

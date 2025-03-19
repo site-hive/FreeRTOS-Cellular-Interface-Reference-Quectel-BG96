@@ -146,6 +146,10 @@ CellularError_t Cellular_MqttConfigureReceiveMode(CellularHandle_t cellularHandl
                                                   bool message_not_in_urc,
                                                   bool message_length_in_urc);
 
+CellularError_t Cellular_MqttConfigureSendMode(CellularHandle_t cellularHandle,
+                                                uint8_t mqttContextId,
+                                                bool message_not_in_urc);
+
 CellularError_t Cellular_MqttOpen(CellularHandle_t cellularHandle,
                                   uint8_t mqttContextId,
                                   const char* endpoint,
