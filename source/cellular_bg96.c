@@ -273,15 +273,14 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
 
         if ( cellularStatus == CELLULAR_SUCCESS )
         {
-            if (cellularStatus == CELLULAR_SUCCESS)
+            cellularStatus = Cellular_GetModemInfo(pContext, &pModemInfo);
+            if ( cellularStatus == CELLULAR_SUCCESS )
             {
-                cellularStatus = Cellular_GetModemInfo(pContext, &pModemInfo);
-        
                 if (strcmp(pModemInfo.modelId, "BG96") == 0)
                 {
                     cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_BG96;
                 }
-                else if (strcmp(pModemInfo.modelId, "EG21G") == 0)
+                else if (strcmp(pModemInfo.modelId, "EG21") == 0)
                 {
                     cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_EG21G;
                 }
@@ -289,6 +288,10 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
                 {
                     cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_UNKNOWN;
                 }
+            }
+            else
+            {
+                cellularBg96Context.moduleType = CELLULAR_MODULE_TYPE_UNKNOWN;
             }
         }
 
@@ -309,13 +312,13 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
         if( ( cellularStatus == CELLULAR_SUCCESS ) && ( cellularBg96Context.moduleType == CELLULAR_MODULE_TYPE_BG96 ))
         {
             /* Configure Network Category to be Searched under LTE RAT to LTE Cat M1 and Cat NB1. */
-            atReqGetNoResult.pAtCmd = "AT+QCFG=\"iotopmode\",2,1";
+            atReqGetNoResult.pAtCmd = "AT+QCFG=\"iotopmode\",0,1";
             cellularStatus = sendAtCommandWithRetryTimeout( pContext, &atReqGetNoResult );
         }
 
         if( cellularStatus == CELLULAR_SUCCESS )
         {
-            /* Configure Network Category to be Searched under LTE RAT to LTE Cat M1 and Cat NB1. */
+            /* Enable data roaming */
             atReqGetNoResult.pAtCmd = "AT+QCFG=\"roamservice\",2,1";
             cellularStatus = sendAtCommandWithRetryTimeout( pContext, &atReqGetNoResult );
         }
