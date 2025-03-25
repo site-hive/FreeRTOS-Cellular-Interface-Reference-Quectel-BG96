@@ -311,7 +311,7 @@ CellularError_t Cellular_ModuleEnableUE( CellularContext_t * pContext )
 
         if( ( cellularStatus == CELLULAR_SUCCESS ) && ( cellularBg96Context.moduleType == CELLULAR_MODULE_TYPE_BG96 ))
         {
-            /* Configure Network Category to be Searched under LTE RAT to LTE Cat M1 and Cat NB1. */
+            /* Configure Network Category to be Searched under LTE RAT to LTE Cat M1 only. */
             atReqGetNoResult.pAtCmd = "AT+QCFG=\"iotopmode\",0,1";
             cellularStatus = sendAtCommandWithRetryTimeout( pContext, &atReqGetNoResult );
         }
