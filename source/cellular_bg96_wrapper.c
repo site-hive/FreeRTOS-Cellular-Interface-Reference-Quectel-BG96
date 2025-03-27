@@ -168,18 +168,6 @@ CellularError_t Cellular_RfOff( CellularHandle_t cellularHandle )
 
 /* FreeRTOS Cellular Library API. */
 /* coverity[misra_c_2012_rule_8_7_violation] */
-CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
-                                       uint8_t contextId,
-                                       char * pBuffer,
-                                       uint32_t bufferLength )
-{
-    return Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
-}
-
-/*-----------------------------------------------------------*/
-
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_GetModemInfo( CellularHandle_t cellularHandle,
                                        CellularModemInfo_t * pModemInfo )
 {

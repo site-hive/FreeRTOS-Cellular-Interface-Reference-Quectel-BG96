@@ -4728,3 +4728,45 @@ CellularError_t Cellular_GetModuleType(CellularHandle_t cellularHandle, Cellular
 
     return cellularStatus;
 }
+
+CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
+    uint8_t contextId,
+    char * pBuffer,
+    uint32_t bufferLength )
+{
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
+    CellularModuleType_t moduleType;
+
+    // Skip error if it fails to get module type
+    Cellular_GetModuleType( cellularHandle, &moduleType );
+
+    cellularStatus = Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
+
+    if ( ( cellularStatus == CELLULAR_SUCCESS ) && ( moduleType != CELLULAR_MODULE_TYPE_BG96 ) )
+    {
+        // Remove quotes from the IP string in-place
+        size_t readIndex  = 0;
+        size_t writeIndex = 0;
+
+        while (pBuffer[readIndex] != '\0' && readIndex < bufferLength)
+        {
+            if (pBuffer[readIndex] != '\"')  // Skip quote characters
+            {
+                pBuffer[writeIndex++] = pBuffer[readIndex];
+            }
+            readIndex++;
+        }
+
+        // Null-terminate the modified string
+        if (writeIndex < bufferLength)
+        {
+            pBuffer[writeIndex] = '\0';
+        }
+        else if (bufferLength > 0)
+        {
+            pBuffer[bufferLength - 1] = '\0';
+        }
+    }
+    
+    return cellularStatus;
+}
