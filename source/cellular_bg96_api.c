@@ -4735,36 +4735,39 @@ CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
     uint32_t bufferLength )
 {
     CellularError_t cellularStatus = CELLULAR_SUCCESS;
-    CellularModuleType_t moduleType;
-
-    // Skip error if it fails to get module type
-    Cellular_GetModuleType( cellularHandle, &moduleType );
 
     cellularStatus = Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
 
-    if ( ( cellularStatus == CELLULAR_SUCCESS ) && ( moduleType != CELLULAR_MODULE_TYPE_BG96 ) )
+    if ( cellularStatus == CELLULAR_SUCCESS )
     {
-        // Remove quotes from the IP string in-place
-        size_t readIndex  = 0;
-        size_t writeIndex = 0;
+        CellularModuleType_t moduleType;
+        
+        Cellular_GetModuleType( cellularHandle, &moduleType );
 
-        while (pBuffer[readIndex] != '\0' && readIndex < bufferLength)
+        if (moduleType != CELLULAR_MODULE_TYPE_BG96)
         {
-            if (pBuffer[readIndex] != '\"')  // Skip quote characters
+            // Remove quotes from the IP string in-place
+            size_t readIndex  = 0;
+            size_t writeIndex = 0;
+
+            while (pBuffer[readIndex] != '\0' && readIndex < bufferLength)
             {
-                pBuffer[writeIndex++] = pBuffer[readIndex];
+                if (pBuffer[readIndex] != '\"')  // Skip quote characters
+                {
+                    pBuffer[writeIndex++] = pBuffer[readIndex];
+                }
+                readIndex++;
             }
-            readIndex++;
-        }
 
-        // Null-terminate the modified string
-        if (writeIndex < bufferLength)
-        {
-            pBuffer[writeIndex] = '\0';
-        }
-        else if (bufferLength > 0)
-        {
-            pBuffer[bufferLength - 1] = '\0';
+            // Null-terminate the modified string
+            if (writeIndex < bufferLength)
+            {
+                pBuffer[writeIndex] = '\0';
+            }
+            else if (bufferLength > 0)
+            {
+                pBuffer[bufferLength - 1] = '\0';
+            }
         }
     }
     
