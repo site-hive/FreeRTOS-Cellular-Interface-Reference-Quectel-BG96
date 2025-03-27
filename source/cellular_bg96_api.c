@@ -276,7 +276,8 @@ static bool _parseSignalQuality( char * pQcsqPayload,
     {
         if( ( strcmp( pToken, "GSM" ) != 0 ) &&
             ( strcmp( pToken, "CAT-M1" ) != 0 ) &&
-            ( strcmp( pToken, "CAT-NB1" ) != 0 ) )
+            ( strcmp( pToken, "CAT-NB1" ) != 0 ) &&
+            ( strcmp( pToken, "LTE" ) != 0 ) )
         {
             parseStatus = false;
         }
@@ -3211,12 +3212,13 @@ CellularError_t Cellular_GetSimCardInfo( CellularHandle_t cellularHandle,
 
         if( pktStatus == CELLULAR_PKT_STATUS_OK )
         {
-            pktStatus = _Cellular_AtcmdRequestWithCallback( pContext, atReqGetHplmn );
+            pktStatus = _Cellular_AtcmdRequestWithCallback( pContext, atReqGetIccid );
         }
 
         if( pktStatus == CELLULAR_PKT_STATUS_OK )
-        {
-            pktStatus = _Cellular_AtcmdRequestWithCallback( pContext, atReqGetIccid );
+        {   
+            // Not returning Hplmn status as it fails on some types of simcards e.g. telnyx
+            _Cellular_AtcmdRequestWithCallback( pContext, atReqGetHplmn );
         }
 
         if( pktStatus != CELLULAR_PKT_STATUS_OK )
@@ -4031,6 +4033,41 @@ CellularError_t Cellular_MqttConfigureReceiveMode(CellularHandle_t cellularHandl
     return cellularStatus;
 }
 
+CellularError_t Cellular_MqttConfigureSendMode(CellularHandle_t cellularHandle,
+    uint8_t mqttContextId,
+    bool message_not_in_urc)
+{
+    CellularContext_t * pContext = ( CellularContext_t * ) cellularHandle;
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
+    CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
+    char atCommandBuffer[2*CELLULAR_AT_CMD_TYPICAL_MAX_SIZE] = {0};
+
+    CellularAtReq_t atReqConfigureSslContext =
+    {
+        atCommandBuffer,
+        CELLULAR_AT_NO_RESULT,
+        NULL,
+        NULL,
+        NULL,
+        0,
+    };
+
+    cellularStatus = _Cellular_CheckLibraryStatus( pContext );
+
+    if( cellularStatus == CELLULAR_SUCCESS )
+    {
+        /* The return value of snprintf is not used.
+        * The max length of the string is fixed and checked offline. */
+        /* coverity[misra_c_2012_rule_21_6_violation]. */
+        ( void ) snprintf(atCommandBuffer, 2*CELLULAR_AT_CMD_TYPICAL_MAX_SIZE, "AT+QMTCFG=\"send/mode\",%d,%d",
+                mqttContextId, (uint8_t)message_not_in_urc);
+        pktStatus = _Cellular_AtcmdRequestWithCallback( pContext, atReqConfigureSslContext );
+        cellularStatus = _Cellular_TranslatePktStatus( pktStatus );
+    }
+
+    return cellularStatus;
+}
+
 CellularError_t Cellular_MqttOpen(CellularHandle_t cellularHandle,
         uint8_t mqttContextId,
         const char * endpoint,
@@ -4209,6 +4246,7 @@ CellularError_t Cellular_MqttPublish(CellularHandle_t cellularHandle,
                                      uint32_t * sentDataLength )
 {
     CellularContext_t * pContext = ( CellularContext_t * ) cellularHandle;
+    cellularModuleContext_t * pModuleContext = NULL;
     CellularError_t cellularStatus = CELLULAR_SUCCESS;
     CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
     uint32_t sendTimeout = DATA_SEND_TIMEOUT_MS;
@@ -4248,8 +4286,16 @@ CellularError_t Cellular_MqttPublish(CellularHandle_t cellularHandle,
         /* Send data length check. */
         if( messageLength <= ( uint32_t ) CELLULAR_MQTT_MAX_SEND_DATA_LEN )
         {
+
+            cellularStatus = _Cellular_GetModuleContext( pContext, ( void ** ) &pModuleContext );
+            char * publishCommand = "AT+QMTPUBEX=";
+            if ( pModuleContext != NULL && pModuleContext->moduleType == CELLULAR_MODULE_TYPE_BG96 )
+            {
+                publishCommand = "AT+QMTPUB=";
+            }
+
             ( void ) snprintf( cmdBuf, 6*CELLULAR_AT_CMD_TYPICAL_MAX_SIZE, "%s%d,%d,%d,%d,\"%s\",%ld",
-                               "AT+QMTPUB=", mqttContextId, messageId, (uint8_t)qos, retain, topic, atDataReqMqttPublish.dataLen);
+                               publishCommand, mqttContextId, messageId, (uint8_t)qos, retain, topic, atDataReqMqttPublish.dataLen);
             pktStatus = _Cellular_AtcmdDataSend( pContext, atReqSocketSend, atDataReqMqttPublish,
                                                  socketSendDataPrefix, NULL,
                                                  PACKET_REQ_TIMEOUT_MS, sendTimeout, 0U );
@@ -4659,5 +4705,71 @@ CellularError_t Cellular_MqttReadIncomingPublish( CellularHandle_t cellularHandl
         }
     }
 
+    return cellularStatus;
+}
+
+CellularError_t Cellular_GetModuleType(CellularHandle_t cellularHandle, CellularModuleType_t * moduleType)
+{
+    CellularContext_t * pContext = ( CellularContext_t * ) cellularHandle;
+    cellularModuleContext_t * pModuleContext = NULL;
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
+
+    cellularStatus = _Cellular_GetModuleContext( pContext, ( void ** ) &pModuleContext );
+    
+    if (pModuleContext != NULL)
+    {
+        *moduleType = pModuleContext->moduleType;
+    }
+    else
+    {
+        *moduleType = CELLULAR_MODULE_TYPE_UNKNOWN;
+        cellularStatus = CELLULAR_UNKNOWN;
+    }
+
+    return cellularStatus;
+}
+
+CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
+    uint8_t contextId,
+    char * pBuffer,
+    uint32_t bufferLength )
+{
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
+
+    cellularStatus = Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
+
+    if ( cellularStatus == CELLULAR_SUCCESS )
+    {
+        CellularModuleType_t moduleType;
+        
+        Cellular_GetModuleType( cellularHandle, &moduleType );
+
+        if (moduleType != CELLULAR_MODULE_TYPE_BG96)
+        {
+            // Remove quotes from the IP string in-place
+            size_t readIndex  = 0;
+            size_t writeIndex = 0;
+
+            while (pBuffer[readIndex] != '\0' && readIndex < bufferLength)
+            {
+                if (pBuffer[readIndex] != '\"')  // Skip quote characters
+                {
+                    pBuffer[writeIndex++] = pBuffer[readIndex];
+                }
+                readIndex++;
+            }
+
+            // Null-terminate the modified string
+            if (writeIndex < bufferLength)
+            {
+                pBuffer[writeIndex] = '\0';
+            }
+            else if (bufferLength > 0)
+            {
+                pBuffer[bufferLength - 1] = '\0';
+            }
+        }
+    }
+    
     return cellularStatus;
 }

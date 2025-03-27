@@ -8,6 +8,8 @@
 /* IoT Cellular data types. */
 #include "cellular_types.h"
 
+#include "cellular_bg96_types.h"
+
 #define BG96_API_NO_SSL_CONTEXT_ID    (-1)
 #define BG96_API_MQTT_SSL_CONTEXT_ID  (1)
 #define BG96_API_HTTPS_SSL_CONTEXT_ID (2)
@@ -146,6 +148,10 @@ CellularError_t Cellular_MqttConfigureReceiveMode(CellularHandle_t cellularHandl
                                                   bool message_not_in_urc,
                                                   bool message_length_in_urc);
 
+CellularError_t Cellular_MqttConfigureSendMode(CellularHandle_t cellularHandle,
+                                                uint8_t mqttContextId,
+                                                bool message_not_in_urc);
+
 CellularError_t Cellular_MqttOpen(CellularHandle_t cellularHandle,
                                   uint8_t mqttContextId,
                                   const char* endpoint,
@@ -191,6 +197,9 @@ CellularError_t Cellular_MqttReadIncomingPublish( CellularHandle_t cellularHandl
                                                   char * topic,
                                                   uint32_t topicBufferLength,
                                                   uint32_t * receivedTopicLength);
+
+CellularError_t Cellular_GetModuleType(CellularHandle_t cellularHandle, 
+                                       CellularModuleType_t * moduleType);
 
 
 #endif

@@ -49,6 +49,8 @@
 #define DATA_SEND_TIMEOUT_MS                       ( 50000UL )
 #define DATA_READ_TIMEOUT_MS                       ( 50000UL )
 
+#include "cellular_bg96_types.h"
+
 /**
  * @brief DNS query result.
  */
@@ -78,6 +80,7 @@ typedef struct cellularModuleContext
     uint8_t dnsIndex;              /* DNS query current index. */
     char * pDnsUsrData;            /* DNS user data to store the result. */
     CellularDnsResultEventCallback_t dnsEventCallback;
+    CellularModuleType_t moduleType; /* Represents the current cellular module being used */
 } cellularModuleContext_t;
 
 CellularPktStatus_t _Cellular_ParseSimstat( char * pInputStr,
