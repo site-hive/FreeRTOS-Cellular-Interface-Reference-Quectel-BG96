@@ -40,8 +40,6 @@
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_Cleanup( CellularHandle_t cellularHandle )
 {
     return Cellular_CommonCleanup( cellularHandle );
@@ -49,8 +47,6 @@ CellularError_t Cellular_Cleanup( CellularHandle_t cellularHandle )
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_RegisterUrcNetworkRegistrationEventCallback( CellularHandle_t cellularHandle,
                                                                       CellularUrcNetworkRegistrationCallback_t networkRegistrationCallback,
                                                                       void * pCallbackContext )
@@ -60,8 +56,6 @@ CellularError_t Cellular_RegisterUrcNetworkRegistrationEventCallback( CellularHa
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_RegisterUrcPdnEventCallback( CellularHandle_t cellularHandle,
                                                       CellularUrcPdnEventCallback_t pdnEventCallback,
                                                       void * pCallbackContext )
@@ -71,8 +65,6 @@ CellularError_t Cellular_RegisterUrcPdnEventCallback( CellularHandle_t cellularH
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_RegisterUrcGenericCallback( CellularHandle_t cellularHandle,
                                                      CellularUrcGenericCallback_t genericCallback,
                                                      void * pCallbackContext )
@@ -82,8 +74,6 @@ CellularError_t Cellular_RegisterUrcGenericCallback( CellularHandle_t cellularHa
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_RegisterModemEventCallback( CellularHandle_t cellularHandle,
                                                      CellularModemEventCallback_t modemEventCallback,
                                                      void * pCallbackContext )
@@ -93,8 +83,6 @@ CellularError_t Cellular_RegisterModemEventCallback( CellularHandle_t cellularHa
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_ATCommandRaw( CellularHandle_t cellularHandle,
                                        const char * pATCommandPrefix,
                                        const char * pATCommandPayload,
@@ -109,8 +97,32 @@ CellularError_t Cellular_ATCommandRaw( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
+CellularError_t Cellular_CreateSocket( CellularHandle_t cellularHandle,
+                                       uint8_t pdnContextId,
+                                       CellularSocketDomain_t socketDomain,
+                                       CellularSocketType_t socketType,
+                                       CellularSocketProtocol_t socketProtocol,
+                                       CellularSocketHandle_t * pSocketHandle )
+{
+    return Cellular_CommonCreateSocket( cellularHandle, pdnContextId, socketDomain, socketType,
+                                        socketProtocol, pSocketHandle );
+}
+
+/*-----------------------------------------------------------*/
+
+CellularError_t Cellular_SocketSetSockOpt( CellularHandle_t cellularHandle,
+                                           CellularSocketHandle_t socketHandle,
+                                           CellularSocketOptionLevel_t optionLevel,
+                                           CellularSocketOption_t option,
+                                           const uint8_t * pOptionValue,
+                                           uint32_t optionValueLength )
+{
+    return Cellular_CommonSocketSetSockOpt( cellularHandle, socketHandle, optionLevel, option,
+                                            pOptionValue, optionValueLength );
+}
+
+/*-----------------------------------------------------------*/
+
 CellularError_t Cellular_SocketRegisterDataReadyCallback( CellularHandle_t cellularHandle,
                                                           CellularSocketHandle_t socketHandle,
                                                           CellularSocketDataReadyCallback_t dataReadyCallback,
@@ -122,8 +134,6 @@ CellularError_t Cellular_SocketRegisterDataReadyCallback( CellularHandle_t cellu
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_SocketRegisterSocketOpenCallback( CellularHandle_t cellularHandle,
                                                            CellularSocketHandle_t socketHandle,
                                                            CellularSocketOpenCallback_t socketOpenCallback,
@@ -135,8 +145,6 @@ CellularError_t Cellular_SocketRegisterSocketOpenCallback( CellularHandle_t cell
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_SocketRegisterClosedCallback( CellularHandle_t cellularHandle,
                                                        CellularSocketHandle_t socketHandle,
                                                        CellularSocketClosedCallback_t closedCallback,
@@ -148,8 +156,6 @@ CellularError_t Cellular_SocketRegisterClosedCallback( CellularHandle_t cellular
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_RfOn( CellularHandle_t cellularHandle )
 {
     return Cellular_CommonRfOn( cellularHandle );
@@ -157,8 +163,6 @@ CellularError_t Cellular_RfOn( CellularHandle_t cellularHandle )
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_RfOff( CellularHandle_t cellularHandle )
 {
     return Cellular_CommonRfOff( cellularHandle );
@@ -166,8 +170,16 @@ CellularError_t Cellular_RfOff( CellularHandle_t cellularHandle )
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
+CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
+                                       uint8_t contextId,
+                                       char * pBuffer,
+                                       uint32_t bufferLength )
+{
+    return Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
+}
+
+/*-----------------------------------------------------------*/
+
 CellularError_t Cellular_GetModemInfo( CellularHandle_t cellularHandle,
                                        CellularModemInfo_t * pModemInfo )
 {
@@ -176,8 +188,6 @@ CellularError_t Cellular_GetModemInfo( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_GetEidrxSettings( CellularHandle_t cellularHandle,
                                            CellularEidrxSettingsList_t * pEidrxSettingsList )
 {
@@ -186,8 +196,6 @@ CellularError_t Cellular_GetEidrxSettings( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_SetEidrxSettings( CellularHandle_t cellularHandle,
                                            const CellularEidrxSettings_t * pEidrxSettings )
 {
@@ -196,8 +204,6 @@ CellularError_t Cellular_SetEidrxSettings( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_GetRegisteredNetwork( CellularHandle_t cellularHandle,
                                                CellularPlmnInfo_t * pNetworkInfo )
 {
@@ -206,8 +212,6 @@ CellularError_t Cellular_GetRegisteredNetwork( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_GetNetworkTime( CellularHandle_t cellularHandle,
                                          CellularTime_t * pNetworkTime )
 {
@@ -216,8 +220,6 @@ CellularError_t Cellular_GetNetworkTime( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-/* FreeRTOS Cellular Library API. */
-/* coverity[misra_c_2012_rule_8_7_violation] */
 CellularError_t Cellular_GetServiceStatus( CellularHandle_t cellularHandle,
                                            CellularServiceStatus_t * pServiceStatus )
 {
