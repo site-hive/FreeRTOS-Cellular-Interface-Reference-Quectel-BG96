@@ -1967,9 +1967,20 @@ static CellularPktStatus_t secureSocketRecvDataPrefix( void * pCallbackContext,
     CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
     uint32_t i = 0;
     char pLocalLine[ MAX_QSSLRECV_STRING_PREFIX_STRING + 1 ] = "\0";
-    uint32_t localLineLength = MAX_QSSLRECV_STRING_PREFIX_STRING > lineLength ? lineLength : MAX_QSSLRECV_STRING_PREFIX_STRING;
+    uint32_t localLineLength = 0;
 
+    /* Callback context is not used in this function. */
     ( void ) pCallbackContext;
+
+    /* localLineLength keeps the maximum string length to compare. */
+    if( MAX_QSSLRECV_STRING_PREFIX_STRING > lineLength )
+    {
+        localLineLength = lineLength;
+    }
+    else
+    {
+        localLineLength = MAX_QSSLRECV_STRING_PREFIX_STRING;
+    }
 
     if( ( pLine == NULL ) || ( ppDataStart == NULL ) || ( pDataLength == NULL ) )
     {
@@ -1995,42 +2006,69 @@ static CellularPktStatus_t secureSocketRecvDataPrefix( void * pCallbackContext,
                 }
             }
 
+            /* BG96 expects a complete line to be received then the data stream. The
+             * input buffer doesn't contain a complete line. */
             if( i == localLineLength )
             {
-                LogDebug( ( "Data prefix invalid line : %s", pLocalLine ) );
-                pDataStart = NULL;
-            }
-        }
-
-        if( pDataStart != NULL )
-        {
-            atResult = Cellular_ATStrtoi( &pDataStart[ SECURE_DATA_PREFIX_STRING_LENGTH ], 10, &tempValue );
-
-            if( ( atResult == CELLULAR_AT_SUCCESS ) && ( tempValue >= 0 ) &&
-                ( tempValue <= ( int32_t ) CELLULAR_MAX_RECV_DATA_LEN ) )
-            {
-                if( ( prefixLineLength + SECURE_DATA_PREFIX_STRING_CHANGELINE_LENGTH ) > lineLength )
+                if( localLineLength == MAX_QSSLRECV_STRING_PREFIX_STRING )
                 {
-                    /* More data is required. */
-                    *pDataLength = 0;
-                    pDataStart = NULL;
-                    pktStatus = CELLULAR_PKT_STATUS_SIZE_MISMATCH;
+                    /* A complete line is not found within MAX_QSSLRECV_STRING_PREFIX_STRING.
+                     * Returns prefix mismatch here. Pktio can continue to parse
+                     * the string. */
+                    LogDebug( ( "Data prefix matched incomplete line : %s", pLocalLine ) );
+                    pktStatus = CELLULAR_PKT_STATUS_PREFIX_MISMATCH;
                 }
                 else
                 {
-                    pDataStart = &pLine[ prefixLineLength ];
-                    pDataStart[ 0 ] = '\0';
-                    pDataStart = &pDataStart[ SECURE_DATA_PREFIX_STRING_CHANGELINE_LENGTH ];
-                    *pDataLength = ( uint32_t ) tempValue;
+                    /* A complete line is not found. The line doesn't contains enough
+                     * bytes for the prefix string. Pktio will call this callback
+                     * again with more data. */
+                    LogDebug( ( "Data prefix incomplete line : %s", pLocalLine ) );
+                    pktStatus = CELLULAR_PKT_STATUS_SIZE_MISMATCH;
                 }
+            }
+            else if( ( prefixLineLength + SECURE_DATA_PREFIX_STRING_CHANGELINE_LENGTH ) > lineLength )
+            {
+                /* The complete changeline "\r\n" is not received. Returns size mismatch
+                 * to pktio. Pktio will call this callback again with more data. */
+                LogDebug( ( "Data prefix incomplete line : %s", pLocalLine ) );
+                pktStatus = CELLULAR_PKT_STATUS_SIZE_MISMATCH;
+            }
+            else
+            {
+                /* The input steam contains valid prefix and the line is ended with
+                 * "\r\n". Continue to parse the received data length. */
+                pktStatus = CELLULAR_PKT_STATUS_OK;
+            }
+        }
+        else
+        {
+            /* The prefix is not expected "+QSSLRECV:". This is probably a URC response.
+             * returns CELLULAR_PKT_STATUS_PREFIX_MISMATCH to pktio. Pktio can continue
+             * to parse the string. */
+            pktStatus = CELLULAR_PKT_STATUS_PREFIX_MISMATCH;
+        }
 
+        /* This line contains a valid response prefix and a complete line. Continue
+         * to parse the <read_actual_length> field in this line. */
+        if( pktStatus == CELLULAR_PKT_STATUS_OK )
+        {
+            atResult = Cellular_ATStrtoi( &pDataStart[ SECURE_DATA_PREFIX_STRING_LENGTH ], 10, &receivedDataLength );
+
+            if( ( atResult == CELLULAR_AT_SUCCESS ) &&
+                ( receivedDataLength >= 0 ) &&
+                ( receivedDataLength <= ( int32_t ) CELLULAR_MAX_RECV_DATA_LEN ) )
+            {
+                /* The input stream contains valid line. prefixLineLength + SECURE_DATA_PREFIX_STRING_CHANGELINE_LENGTH
+                 * is the offset to the start of the data stream. */
+                *pDataLength = ( uint32_t ) receivedDataLength;
+                *ppDataStart = &pLine[ prefixLineLength + SECURE_DATA_PREFIX_STRING_CHANGELINE_LENGTH ];
                 LogDebug( ( "DataLength %p at pktIo = %d", pDataStart, *pDataLength ) );
             }
             else
             {
-                *pDataLength = 0;
-                pDataStart = NULL;
-                LogError( ( "Data response received with wrong size" ) );
+                LogError( ( "Data response received with wrong size %s.", &pDataStart[ SECURE_DATA_PREFIX_STRING_LENGTH ] ) );
+                pktStatus = CELLULAR_PKT_STATUS_FAILURE;
             }
         }
 
