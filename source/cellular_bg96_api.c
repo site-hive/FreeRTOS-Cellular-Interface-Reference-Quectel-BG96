@@ -1962,7 +1962,7 @@ static CellularPktStatus_t secureSocketRecvDataPrefix( void * pCallbackContext,
 {
     char * pDataStart = NULL;
     uint32_t prefixLineLength = 0U;
-    int32_t tempValue = 0;
+    int32_t receivedDataLength = 0;
     CellularATError_t atResult = CELLULAR_AT_SUCCESS;
     CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
     uint32_t i = 0;
