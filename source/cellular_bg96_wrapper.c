@@ -97,29 +97,33 @@ CellularError_t Cellular_ATCommandRaw( CellularHandle_t cellularHandle,
 
 /*-----------------------------------------------------------*/
 
-CellularError_t Cellular_CreateSocket( CellularHandle_t cellularHandle,
-                                       uint8_t pdnContextId,
-                                       CellularSocketDomain_t socketDomain,
-                                       CellularSocketType_t socketType,
-                                       CellularSocketProtocol_t socketProtocol,
-                                       CellularSocketHandle_t * pSocketHandle )
-{
-    return Cellular_CommonCreateSocket( cellularHandle, pdnContextId, socketDomain, socketType,
-                                        socketProtocol, pSocketHandle );
-}
+// Overridden by cellular_bg96_api.c as part of
+// https://github.com/site-hive/FreeRTOS-Cellular-Interface-Reference-Quectel-BG96/pull/1/
+// CellularError_t Cellular_CreateSocket( CellularHandle_t cellularHandle,
+//                                        uint8_t pdnContextId,
+//                                        CellularSocketDomain_t socketDomain,
+//                                        CellularSocketType_t socketType,
+//                                        CellularSocketProtocol_t socketProtocol,
+//                                        CellularSocketHandle_t * pSocketHandle )
+// {
+//     return Cellular_CommonCreateSocket( cellularHandle, pdnContextId, socketDomain, socketType,
+//                                         socketProtocol, pSocketHandle );
+// }
 
 /*-----------------------------------------------------------*/
 
-CellularError_t Cellular_SocketSetSockOpt( CellularHandle_t cellularHandle,
-                                           CellularSocketHandle_t socketHandle,
-                                           CellularSocketOptionLevel_t optionLevel,
-                                           CellularSocketOption_t option,
-                                           const uint8_t * pOptionValue,
-                                           uint32_t optionValueLength )
-{
-    return Cellular_CommonSocketSetSockOpt( cellularHandle, socketHandle, optionLevel, option,
-                                            pOptionValue, optionValueLength );
-}
+// Overridden by cellular_bg96_api.c as part of
+// https://github.com/site-hive/FreeRTOS-Cellular-Interface-Reference-Quectel-BG96/pull/1/
+// CellularError_t Cellular_SocketSetSockOpt( CellularHandle_t cellularHandle,
+//                                            CellularSocketHandle_t socketHandle,
+//                                            CellularSocketOptionLevel_t optionLevel,
+//                                            CellularSocketOption_t option,
+//                                            const uint8_t * pOptionValue,
+//                                            uint32_t optionValueLength )
+// {
+//     return Cellular_CommonSocketSetSockOpt( cellularHandle, socketHandle, optionLevel, option,
+//                                             pOptionValue, optionValueLength );
+// }
 
 /*-----------------------------------------------------------*/
 
@@ -170,13 +174,15 @@ CellularError_t Cellular_RfOff( CellularHandle_t cellularHandle )
 
 /*-----------------------------------------------------------*/
 
-CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
-                                       uint8_t contextId,
-                                       char * pBuffer,
-                                       uint32_t bufferLength )
-{
-    return Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
-}
+// Overridden by cellular_bg96_api.c as part of
+// https://github.com/site-hive/FreeRTOS-Cellular-Interface-Reference-Quectel-BG96/pull/5/
+// CellularError_t Cellular_GetIPAddress( CellularHandle_t cellularHandle,
+//                                        uint8_t contextId,
+//                                        char * pBuffer,
+//                                        uint32_t bufferLength )
+// {
+//     return Cellular_CommonGetIPAddress( cellularHandle, contextId, pBuffer, bufferLength );
+// }
 
 /*-----------------------------------------------------------*/
 
