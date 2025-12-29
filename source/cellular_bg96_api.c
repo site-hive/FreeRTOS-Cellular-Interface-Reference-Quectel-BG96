@@ -1964,7 +1964,7 @@ static CellularPktStatus_t secureSocketRecvDataPrefix( void * pCallbackContext,
     uint32_t prefixLineLength = 0U;
     int32_t receivedDataLength = 0;
     CellularATError_t atResult = CELLULAR_AT_SUCCESS;
-    CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
+    CellularPktStatus_t pktStatus;
     uint32_t i = 0;
     char pLocalLine[ MAX_QSSLRECV_STRING_PREFIX_STRING + 1 ] = "\0";
     uint32_t localLineLength = 0;
@@ -1991,6 +1991,8 @@ static CellularPktStatus_t secureSocketRecvDataPrefix( void * pCallbackContext,
         /* Check if the message is a data response. */
         if( strncmp( pLine, SECURE_DATA_PREFIX_STRING, SECURE_DATA_PREFIX_STRING_LENGTH ) == 0 )
         {
+            /* In order not to change the input buffer pLine, copy the maximum QSSLRECV
+             * prefix string to the local buffer. */
             strncpy( pLocalLine, pLine, MAX_QSSLRECV_STRING_PREFIX_STRING );
             pLocalLine[ MAX_QSSLRECV_STRING_PREFIX_STRING ] = '\0';
             pDataStart = pLocalLine;
@@ -2071,8 +2073,6 @@ static CellularPktStatus_t secureSocketRecvDataPrefix( void * pCallbackContext,
                 pktStatus = CELLULAR_PKT_STATUS_FAILURE;
             }
         }
-
-        *ppDataStart = pDataStart;
     }
 
     return pktStatus;
