@@ -2803,12 +2803,12 @@ CellularError_t Cellular_SocketRecv( CellularHandle_t cellularHandle,
     };
     CellularAtReq_t atReqSecureSocketRecv =
     {
-        cmdBuf,
-        CELLULAR_AT_MULTI_DATA_WO_PREFIX,
-        "+QSSLRECV",
-        _Cellular_RecvFuncData,
-        ( void * ) &dataRecv,
-        bufferLength,
+        .pAtCmd       = cmdBuf,
+        .atCmdType    = CELLULAR_AT_MULTI_DATA_WO_PREFIX,
+        .pAtRspPrefix = "+QSSLRECV",
+        .respCallback = _Cellular_RecvFuncData,
+        .pData        = ( void * ) &dataRecv,
+        .dataLen      = sizeof( dataRecv )
     };
 
     cellularStatus = _Cellular_CheckLibraryStatus( pContext );
