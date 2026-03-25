@@ -38,8 +38,9 @@
 /* AT Command timeout for PDN deactivation. */
 #define PDN_DEACTIVATION_PACKET_REQ_TIMEOUT_MS           ( 40000UL )
 
-/* AT Command timeout for Socket connection */
-#define SOCKET_CONNECT_PACKET_REQ_TIMEOUT_MS             ( 150000UL )
+/* AT Command timeout for Socket connection.
+ * QSSLOPEN can take up to 150s + TLS negotiation time (up to 300s). */
+#define SOCKET_CONNECT_PACKET_REQ_TIMEOUT_MS             ( 480000UL )
 
 #define PACKET_REQ_TIMEOUT_MS                            ( 5000UL )
 
