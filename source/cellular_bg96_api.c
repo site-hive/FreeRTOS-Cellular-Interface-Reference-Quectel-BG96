@@ -2200,6 +2200,124 @@ static void _dnsResultCallback( cellularModuleContext_t * pModuleContext,
 
 /*-----------------------------------------------------------*/
 
+static CellularError_t registerPingEventCallback( cellularModuleContext_t * pModuleContext,
+                                                  CellularPingResultEventCallback_t pingEventCallback )
+{
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
+
+    if( pModuleContext == NULL )
+    {
+        cellularStatus = CELLULAR_INVALID_HANDLE;
+    }
+    else
+    {
+        pModuleContext->pingEventCallback = pingEventCallback;
+    }
+
+    return cellularStatus;
+}
+
+/*-----------------------------------------------------------*/
+
+static void _pingResultCallback( cellularModuleContext_t * pModuleContext,
+                                 int32_t pingResult )
+{
+    if( pModuleContext == NULL )
+    {
+        return;
+    }
+
+    ( void ) registerPingEventCallback( pModuleContext, NULL );
+
+    if( xQueueSend( pModuleContext->pktPingQueue, &pingResult, ( TickType_t ) 0 ) != pdPASS )
+    {
+        LogDebug( ( "_pingResultCallback sends pktPingQueue fail" ) );
+    }
+}
+
+/*-----------------------------------------------------------*/
+
+int32_t Cellular_Ping( CellularHandle_t cellularHandle,
+                       uint8_t contextId,
+                       const char * pHost,
+                       uint32_t timeoutS )
+{
+    CellularContext_t * pContext = ( CellularContext_t * ) cellularHandle;
+    CellularError_t cellularStatus = CELLULAR_SUCCESS;
+    CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
+    char cmdBuf[ CELLULAR_AT_CMD_MAX_SIZE ] = { '\0' };
+    int32_t pingResult = -1;
+    cellularModuleContext_t * pModuleContext = NULL;
+    CellularAtReq_t atReqPing =
+    {
+        cmdBuf,
+        CELLULAR_AT_NO_RESULT,
+        NULL,
+        NULL,
+        NULL,
+        0,
+    };
+
+    cellularStatus = _Cellular_CheckLibraryStatus( pContext );
+
+    if( cellularStatus != CELLULAR_SUCCESS )
+    {
+        LogDebug( ( "_Cellular_CheckLibraryStatus failed" ) );
+    }
+    else if( pHost == NULL )
+    {
+        cellularStatus = CELLULAR_BAD_PARAMETER;
+    }
+    else
+    {
+        cellularStatus = _Cellular_IsValidPdn( contextId );
+    }
+
+    if( cellularStatus == CELLULAR_SUCCESS )
+    {
+        cellularStatus = _Cellular_GetModuleContext( pContext, ( void ** ) &pModuleContext );
+    }
+
+    if( cellularStatus == CELLULAR_SUCCESS )
+    {
+        PlatformMutex_Lock( &pModuleContext->contextMutex );
+        ( void ) xQueueReset( pModuleContext->pktPingQueue );
+        cellularStatus = registerPingEventCallback( pModuleContext, _pingResultCallback );
+    }
+
+    if( cellularStatus == CELLULAR_SUCCESS )
+    {
+        ( void ) snprintf( cmdBuf, sizeof( cmdBuf ), "AT+QPING=%u,\"%s\",%u,1", contextId, pHost, ( unsigned int ) timeoutS );
+        pktStatus = _Cellular_AtcmdRequestWithCallback( pContext, atReqPing );
+
+        if( pktStatus != CELLULAR_PKT_STATUS_OK )
+        {
+            LogError( ( "Cellular_Ping: AT command failed status=%d", pktStatus ) );
+            ( void ) registerPingEventCallback( pModuleContext, NULL );
+            PlatformMutex_Unlock( &pModuleContext->contextMutex );
+            return -1;
+        }
+    }
+
+    if( cellularStatus == CELLULAR_SUCCESS )
+    {
+        /* Wait for URC: modem timeout plus 2 s overhead. */
+        if( xQueueReceive( pModuleContext->pktPingQueue, &pingResult,
+                           pdMS_TO_TICKS( ( timeoutS + 2U ) * 1000U ) ) != pdTRUE )
+        {
+            LogDebug( ( "Cellular_Ping: URC timed out" ) );
+            ( void ) registerPingEventCallback( pModuleContext, NULL );
+            pingResult = -1;
+        }
+
+        PlatformMutex_Unlock( &pModuleContext->contextMutex );
+    }
+
+    return pingResult;
+}
+
+/*-----------------------------------------------------------*/
+
 CellularError_t Cellular_SetRatPriority( CellularHandle_t cellularHandle,
                                          const CellularRat_t * pRatPriorities,
                                          uint8_t ratPrioritiesLength )

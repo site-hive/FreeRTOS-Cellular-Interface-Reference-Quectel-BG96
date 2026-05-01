@@ -163,7 +163,19 @@ CellularError_t Cellular_ModuleInit( const CellularContext_t * pContext,
             }
             else
             {
-                *ppModuleContext = ( void * ) &cellularBg96Context;
+                /* Create the queue for ping. */
+                cellularBg96Context.pktPingQueue = xQueueCreate( 1, sizeof( int32_t ) );
+
+                if( cellularBg96Context.pktPingQueue == NULL )
+                {
+                    vQueueDelete( cellularBg96Context.pktDnsQueue );
+                    PlatformMutex_Destroy( &cellularBg96Context.contextMutex );
+                    cellularStatus = CELLULAR_NO_MEMORY;
+                }
+                else
+                {
+                    *ppModuleContext = ( void * ) &cellularBg96Context;
+                }
             }
         }
 
@@ -195,6 +207,9 @@ CellularError_t Cellular_ModuleCleanUp( const CellularContext_t * pContext )
     {
         /* Delete DNS queue. */
         vQueueDelete( cellularBg96Context.pktDnsQueue );
+
+        /* Delete ping queue. */
+        vQueueDelete( cellularBg96Context.pktPingQueue );
 
         /* Delete the mutex for DNS. */
         PlatformMutex_Destroy( &cellularBg96Context.contextMutex );
