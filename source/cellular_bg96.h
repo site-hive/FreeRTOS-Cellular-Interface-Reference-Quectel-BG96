@@ -82,6 +82,9 @@ typedef void ( * CellularDnsResultEventCallback_t )( cellularModuleContext_t * p
                                                      char * pDnsResult,
                                                      char * pDnsUsrData );
 
+typedef void ( * CellularPingResultEventCallback_t )( cellularModuleContext_t * pModuleContext,
+                                                      int32_t pingResult );
+
 typedef struct cellularModuleContext
 {
     PlatformMutex_t contextMutex; /* Mutex for module context. */
@@ -91,6 +94,10 @@ typedef struct cellularModuleContext
     uint8_t dnsResultNumber;   /* DNS query result number. */
     uint8_t dnsIndex;          /* DNS query current index. */
     char * pDnsUsrData;        /* DNS user data to store the result. */
+
+    /* Ping related variables. */
+    QueueHandle_t pktPingQueue;                      /* Queue to receive the +QPING URC result code. */
+    CellularPingResultEventCallback_t pingEventCallback; /* Set while a Cellular_Ping call is in progress. */
 
     #if ( CELLULAR_BG96_SUPPPORT_DIRECT_PUSH_SOCKET == 1 )
         uint8_t pSocketBuffer[ CELLULAR_NUM_SOCKET_MAX ][ CELLULAR_BG96_DIRECT_PUSH_SOCKET_BUFFER_SIZE ];

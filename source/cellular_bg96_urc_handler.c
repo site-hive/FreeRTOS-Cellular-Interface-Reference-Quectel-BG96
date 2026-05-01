@@ -98,6 +98,8 @@ static void _Cellular_ProcessMqttState( CellularContext_t * pContext,
                                          char * pInputLine );
 static void _Cellular_ProcessMqttReceive( CellularContext_t * pContext,
                                          char * pInputLine );
+static void _Cellular_ProcessPingUrc( CellularContext_t * pContext,
+                                      char * pInputLine );
 
 /*-----------------------------------------------------------*/
 
@@ -122,6 +124,7 @@ CellularAtParseTokenMap_t CellularUrcHandlerTable[] =
     { "QMTSTAT",           _Cellular_ProcessMqttState       },
     { "QMTSUB",            _Cellular_ProcessMqttSubscribe   },
     { "QMTUNS",            _Cellular_ProcessMqttUnsubscribe },
+    { "QPING",             _Cellular_ProcessPingUrc         },
     { "QSIMSTAT",          _Cellular_ProcessSimstat         },
     { "QSSLOPEN",          _Cellular_ProcessSocketOpen      },
     { "QSSLURC",           _Cellular_ProcessSocketurc       },
@@ -1853,4 +1856,70 @@ static void _Cellular_ProcessMqttReceive( CellularContext_t * pContext,
     }
 
     LogDebug(("Receive URC completed with status %d", atCoreStatus));
+}
+
+/*-----------------------------------------------------------*/
+
+/* Handle +QPING: URC.
+ *
+ * Failure: +QPING: <errcode>          (non-zero errcode, e.g. 565, 569)
+ * Echo reply: +QPING: 0,"<ip>",<bytes>,<rtt>,<ttl>
+ * Summary: +QPING: 0,<sent>,<recv>,<min>,<max>,<avg>
+ *
+ * We fire the callback on the first URC (failure or echo reply) and ignore the
+ * summary, so the caller unblocks as soon as the first ping result is known.
+ */
+static void _Cellular_ProcessPingUrc( CellularContext_t * pContext,
+                                      char * pInputLine )
+{
+    cellularModuleContext_t * pModuleContext = NULL;
+    CellularATError_t atCoreStatus = CELLULAR_AT_SUCCESS;
+    char * pToken = NULL;
+    char * pLocalInputLine = pInputLine;
+    int32_t resultCode = 0;
+
+    if( _Cellular_GetModuleContext( pContext, ( void ** ) &pModuleContext ) != CELLULAR_SUCCESS )
+    {
+        return;
+    }
+
+    if( pModuleContext->pingEventCallback == NULL )
+    {
+        /* No active Cellular_Ping call — ignore (e.g. summary URC after callback cleared). */
+        return;
+    }
+
+    /* First token is the result code. */
+    atCoreStatus = Cellular_ATGetNextTok( &pLocalInputLine, &pToken );
+
+    if( atCoreStatus != CELLULAR_AT_SUCCESS )
+    {
+        return;
+    }
+
+    atCoreStatus = Cellular_ATStrtoi( pToken, 10, &resultCode );
+
+    if( atCoreStatus != CELLULAR_AT_SUCCESS )
+    {
+        return;
+    }
+
+    if( resultCode != 0 )
+    {
+        /* Failure URC: +QPING: <errcode> */
+        pModuleContext->pingEventCallback( pModuleContext, resultCode );
+    }
+    else
+    {
+        /* Zero result — check whether this is an echo reply or the summary line.
+         * Echo reply has a quoted IP as the next token; summary has a plain integer. */
+        atCoreStatus = Cellular_ATGetNextTok( &pLocalInputLine, &pToken );
+
+        if( ( atCoreStatus == CELLULAR_AT_SUCCESS ) && ( pToken != NULL ) && ( pToken[ 0 ] == '"' ) )
+        {
+            /* Echo reply: +QPING: 0,"<ip>",<bytes>,<rtt>,<ttl> */
+            pModuleContext->pingEventCallback( pModuleContext, 0 );
+        }
+        /* Summary line: +QPING: 0,<sent>,<recv>,...  — ignore, callback already cleared. */
+    }
 }
