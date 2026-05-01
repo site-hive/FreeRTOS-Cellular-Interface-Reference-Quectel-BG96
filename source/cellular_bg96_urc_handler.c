@@ -1889,6 +1889,15 @@ static void _Cellular_ProcessPingUrc( CellularContext_t * pContext,
         return;
     }
 
+    /* Strip any leading whitespace so the second-token quote check below is robust
+     * to firmware variants that pad commas with spaces. */
+    atCoreStatus = Cellular_ATRemoveLeadingWhiteSpaces( &pLocalInputLine );
+
+    if( atCoreStatus != CELLULAR_AT_SUCCESS )
+    {
+        return;
+    }
+
     /* First token is the result code. */
     atCoreStatus = Cellular_ATGetNextTok( &pLocalInputLine, &pToken );
 
