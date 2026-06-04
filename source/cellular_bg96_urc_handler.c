@@ -536,6 +536,7 @@ static CellularPktStatus_t _parseSocketUrcClosed( const CellularContext_t * pCon
     char * pLocalUrcStr = pUrcStr;
     int32_t tempValue = 0;
     uint32_t sockIndex = 0;
+    int32_t errorCode = -1;
     CellularSocketContext_t * pSocketData = NULL;
     CellularATError_t atCoreStatus = CELLULAR_AT_SUCCESS;
     CellularPktStatus_t pktStatus = CELLULAR_PKT_STATUS_OK;
@@ -560,6 +561,18 @@ static CellularPktStatus_t _parseSocketUrcClosed( const CellularContext_t * pCon
         }
     }
 
+    /* Try to parse optional error code: +QIURC: "closed",<connectID>[,<err>] */
+    if( atCoreStatus == CELLULAR_AT_SUCCESS )
+    {
+        if( Cellular_ATGetNextTok( &pLocalUrcStr, &pToken ) == CELLULAR_AT_SUCCESS )
+        {
+            if( Cellular_ATStrtoi( pToken, 10, &tempValue ) == CELLULAR_AT_SUCCESS )
+            {
+                errorCode = tempValue;
+            }
+        }
+    }
+
     if( atCoreStatus == CELLULAR_AT_SUCCESS )
     {
         pSocketData = _Cellular_GetSocketData( pContext, sockIndex );
@@ -567,7 +580,16 @@ static CellularPktStatus_t _parseSocketUrcClosed( const CellularContext_t * pCon
         if( pSocketData != NULL )
         {
             pSocketData->socketState = SOCKETSTATE_DISCONNECTED;
-            LogDebug( ( "Socket closed. Conn Id %d", sockIndex ) );
+
+            /* Log with error code if present */
+            if( errorCode >= 0 )
+            {
+                LogError( ( "Socket closed. Conn Id %d, Error Code: %d", sockIndex, errorCode ) );
+            }
+            else
+            {
+                LogDebug( ( "Socket closed. Conn Id %d", sockIndex ) );
+            }
 
             /* Indicate the upper layer about the socket close. */
             if( pSocketData->closedCallback != NULL )
