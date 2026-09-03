@@ -206,10 +206,18 @@ CellularError_t Cellular_ModuleCleanUp( const CellularContext_t * pContext )
     else
     {
         /* Delete DNS queue. */
-        vQueueDelete( cellularBg96Context.pktDnsQueue );
+        if( cellularBg96Context.pktDnsQueue != NULL )
+        {
+            vQueueDelete( cellularBg96Context.pktDnsQueue );
+            cellularBg96Context.pktDnsQueue = NULL;
+        }
 
         /* Delete ping queue. */
-        vQueueDelete( cellularBg96Context.pktPingQueue );
+        if( cellularBg96Context.pktPingQueue != NULL )
+        {
+            vQueueDelete( cellularBg96Context.pktPingQueue );
+            cellularBg96Context.pktPingQueue = NULL;
+        }
 
         /* Delete the mutex for DNS. */
         PlatformMutex_Destroy( &cellularBg96Context.contextMutex );
